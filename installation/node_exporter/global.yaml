@@ -1,0 +1,46 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 30m
+
+  routes:
+    - match:
+        environment: 'proxmox'
+      receiver: 'slack_proxmox'
+
+    - match:
+        environment: 'aws'
+      receiver: 'slack_aws'
+
+    - match:
+        environment: 'azure'
+      receiver: 'slack_azure'
+
+receivers:
+  - name: 'slack_proxmox'
+    slack_configs:
+      - send_resolved: true
+        api_url: "https://hooks.slack.com/services/your/slack/webhook"
+        channel: "#proxmox-alerts"
+        title: "{{ .GroupLabels.alertname }}"
+ 
+
+  - name: 'slack_aws'
+    slack_configs:
+      - send_resolved: true
+        api_url: "https://hooks.slack.com/services/your/slack/webhook"
+        channel: "#aws-alerts"
+        title: "{{ .GroupLabels.alertname }}"
+
+
+  - name: 'slack_azure'
+    slack_configs:
+      - send_resolved: true
+        api_url: "https://hooks.slack.com/services/your/slack/webhook"
+        channel: "#azure-alerts"
+        title: "{{ .GroupLabels.alertname }}"
+

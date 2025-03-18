@@ -1,0 +1,93 @@
+groups:
+- name: aws.alert.rules
+  rules:
+    - alert: HighCpuUsage
+      expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{job="node-exporter-AWS", mode="idle"}[5m])) * 100) > 90
+      for: 15m
+      labels:
+        severity: critical
+        environment: aws
+      annotations:
+        summary: "High CPU usage on {{ $labels.instance }}"
+        description: "{{ $labels.instance }} is experiencing high CPU usage ({{ $value }}%)."
+
+    - alert: HighMemoryUsage
+      expr: (node_memory_MemTotal_bytes{job="node-exporter-AWS"} - node_memory_MemFree_bytes{job="node-exporter-AWS"} - node_memory_Buffers_bytes{job="node-exporter-AWS"} - node_memory_Cached_bytes{job="node-exporter-AWS"}) / node_memory_MemTotal_bytes{job="node-exporter-AWS"} * 100 > 90
+      for: 15m
+      labels:
+        severity: critical
+        environment: aws
+      annotations:
+        summary: "High Memory usage on {{ $labels.instance }}"
+        description: "{{ $labels.instance }} is experiencing high memory usage ({{ $value }}%)."
+
+    - alert: LowDiskSpace
+      expr: (100 * (1 - (node_filesystem_avail_bytes{job="node-exporter-AWS"} / node_filesystem_size_bytes{job="node-exporter-AWS"}))) > 85
+      for: 15m
+      labels:
+        severity: warning
+        environment: aws
+      annotations:
+        summary: "Low Disk Space on {{ $labels.instance }}"
+        description: "{{ $labels.instance }} is running low on disk space ({{ $value }}%)."
+
+
+
+#     - alert: HostUp
+#       expr: up == 1 and changes(up[1m]) == 1
+#       for: 0s
+#       labels:
+#         severity: info
+#         environment: aws
+#       annotations:
+#         summary: "Host {{ $labels.instance }} has turned on."
+#         description: "The host {{ $labels.instance }} has become active within the last minute."
+
+#     - alert: EndpointDown
+#       expr: probe_success == 0
+#       for: 10s
+#       labels:
+#         severity: critical
+#         environment: aws
+#       annotations:
+#         summary: "Endpoint {{ $labels.instance }} down"
+
+#     - alert: HighContainerCPUUsage
+#       expr: sum(rate(container_cpu_usage_seconds_total{container_name!="POD"}[5m])) by (container_name) / count(node_cpu_seconds_total) by (instance) * 100 > 1
+#       for: 0s
+#       labels:
+#         severity: warning
+#         environment: aws
+#       annotations:
+#         summary: "High CPU Usage in Container {{$labels.container_name}}"
+#         description: "Container {{$labels.container_name}} is using high CPU resources."
+
+#     - alert: HighContainerRestarts
+#       expr: increase(container_cpu_cfs_throttled_seconds_total{container_name!="POD"}[5m]) > 1
+#       for: 5m
+#       labels:
+#         severity: critical
+#         environment: aws
+#       annotations:
+#         summary: "High Container Restarts for Container {{$labels.container_name}}"
+#         description: "Container {{$labels.container_name}} is restarting frequently."
+
+#     - alert: HighNetworkIO
+#       expr: sum(rate(container_network_receive_bytes_total{container_name!="POD"}[5m])) by (container_name) > 1e+07
+#       for: 5m
+#       labels:
+#         severity: warning
+#         environment: aws
+#       annotations:
+#         summary: "High Network I/O for Container {{$labels.container_name}}"
+#         description: "Container {{$labels.container_name}} is experiencing high network traffic."
+
+#     - alert: HighDiskIO
+#       expr: sum(rate(container_fs_io_current{container_name!="POD"}[5m])) by (container_name) > 100
+#       for: 5m
+#       labels:
+#         severity: warning
+#         environment: aws
+#       annotations:
+#         summary: "High Disk I/O for Container {{$labels.container_name}}"
+#         description: "Container {{$labels.container_name}} is experiencing high disk I/O."

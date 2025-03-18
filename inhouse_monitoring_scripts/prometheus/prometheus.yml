@@ -1,0 +1,246 @@
+# Global configuration
+global:
+  scrape_interval: 15s  # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 15s  # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+           - localhost:9093
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+#  - "first_rules.yml"
+  - "proxmox-alerts.yaml"
+  - "azure-alerts.yaml"
+  - "aws-alerts.yaml"
+  # - "second_rules.yml"
+
+# Scrape configuration for node exporter on Azure VMs
+scrape_configs:
+#####################PLATFORM-TEAM##################
+  - job_name: 'apigateway'
+    scrape_interval: 15s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['10.10.40.235:8080']
+
+  - job_name: 'a2service'
+    scrape_interval: 15s
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['10.10.40.235:8081']
+######################AZURE##########################
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "node-exporter-AZURE"
+    azure_sd_configs:
+      - tenant_id: ""
+        client_id: ""
+        client_secret: ""
+        subscription_id: ""
+#        resource_group: "DCAE-Facebook-Airflow-Suraj_group"
+
+    relabel_configs:
+      # Relabel to use the public IP instead of the private IP
+      - source_labels: [__meta_azure_machine_public_ip]
+        regex: (.+)
+        action: replace
+        target_label: __address__
+        replacement: '${1}:9100'
+      - source_labels: [__meta_azure_machine_name,__address__]
+        separator: "::-"
+        target_label: instance
+######################MONGODB###########################
+######################AZURE##########################
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "MONGODB_EXPORTER"
+    azure_sd_configs:
+      - tenant_id: ""
+        client_id: ""
+        client_secret: ""
+        subscription_id: ""
+#        resource_group: "DCAE-Facebook-Airflow-Suraj_group"
+
+    relabel_configs:
+      # Relabel to use the public IP instead of the private IP
+      - source_labels: [__meta_azure_machine_public_ip]
+        regex: (.+)
+        action: replace
+        target_label: __address__
+        replacement: '${1}:9216'
+      - source_labels: [__meta_azure_machine_name,__address__]
+        separator: "::-"
+        target_label: instance
+###################RABBITMQ###############################
+  - job_name: "AZURE-RabbitMQ"
+    azure_sd_configs:
+        - tenant_id: ""
+          client_id: ""
+          client_secret: ""
+          subscription_id: "" 
+    relabel_configs:
+        # Relabel to use the public IP instead of the private IP
+        - source_labels: [__meta_azure_machine_public_ip]
+          regex: (.+)
+          action: replace
+          target_label: __address__
+          replacement: '${1}:15692'
+        - source_labels: [__meta_azure_machine_name,__address__]
+          separator: "::-"
+          target_label: instance
+
+####################REDDIS################################
+  - job_name: "AZURE-Reddis"
+    azure_sd_configs:
+        - tenant_id: ""
+          client_id: ""
+          client_secret: ""
+          subscription_id: "" 
+    relabel_configs:
+        # Relabel to use the public IP instead of the private IP
+        - source_labels: [__meta_azure_machine_public_ip]
+          regex: (.+)
+          action: replace
+          target_label: __address__
+          replacement: '${1}:9121'
+        - source_labels: [__meta_azure_machine_name,__address__]
+          separator: "::-"
+          target_label: instance
+
+
+###################AWS####################################
+  - job_name: "node-exporter-AWS"
+    ec2_sd_configs:
+      - region: ap-south-1
+        access_key: <aws_access_key>
+        secret_key: <aws_secret_key>
+        port: 9100
+      - region: ap-south-1
+        access_key: <aws_access_key>
+        secret_key: <aws_secret_key>
+        port: 9100
+      - region: ap-south-1
+        access_key: <aws_access_key>
+        secret_key: <aws_secret_key>
+        port: 9100
+    relabel_configs:
+#      - source_labels: [__meta_ec2_tag_Name]
+#        target_label: instance
+#      - source_labels: [__address__]
+#        regex: '.*'
+#        target_label: instance
+#        replacement: [__meta_ec2_tag_Name]
+      - source_labels: [__meta_ec2_public_ip]
+        replacement: '${1}:9100'
+        target_label: __address__
+      - source_labels: [__meta_ec2_tag_Name,__address__]
+        target_label: instance
+        separator: "::-"
+      - source_labels: [__meta_ec2_tag_Project]
+        target_label: Project
+      - source_labels: [__meta_ec2_instance_id]
+        target_label: instance_id
+
+################PROXMOX##############################
+
+  - job_name: "node-exporter-PROXMOX"
+    static_configs:
+      - targets:
+          - 10.10.20.50:9100
+        labels:
+          instance_name: "KURAMA"
+      - targets:
+          - 10.10.30.41:9100
+        labels:
+          instance_name: "PINACA-PLANE"
+      - targets:
+          - 10.10.30.43:9100
+        labels:
+          instance_name: "SAPTANG-PLANE"
+      - targets:
+          - 10.10.30.50:9100
+        labels:
+          instance_name: "JENKINS_MASTER"
+      - targets:
+          - 10.10.30.68:9100
+        labels:
+          instance_name: "Jenkins Buildnode"
+      - targets:
+          - 10.10.30.69:9100
+        labels:
+          instance_name: "GITEA"
+      - targets:
+          - 10.10.30.66:9100
+        labels:
+          instance_name: "prometheus local server"
+      - targets:
+          - 10.10.30.74:9100
+        labels:
+          instance_name: "Nexus"
+      - targets:
+          - 10.10.40.235:9100
+        labels:
+          instance_name: "SARUTOBI"
+    relabel_configs:
+      # Relabel to make the instance label more meaningful
+      - source_labels: [instance_name, __address__]
+        separator: "::-"
+        target_label: instance
+        replacement: '${1} ${2}'
+
+
+
+################WEBSITE######################################
+
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: ["http_2xx"] 
+    static_configs:
+      - targets:
+        - https://google.com/    # Target to probe with https.
+        - https://facebook.com/login
+
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: 127.0.0.1:9115  # The blackbox exporter's real hostname:port.
+
+################DOCKER METRICS Using cAdvisor#########################
+  - job_name: "DOCKER_MONITORING"
+    static_configs:
+      - targets: ['10.10.40.235:8080']
+        labels: 
+          instance_name: "SARUTOBI"
+      - targets: ['10.10.20.18:8085']
+        labels:
+          instance_name: "KURAMA"
+      - targets: ['10.10.30.36:8085']
+        labels:
+          instance_name: "Rocketchat"
+      - targets: ['10.10.30.41:8085']
+        labels:
+          instance_name: "pinacaplane"
+      - targets: ['10.10.30.43:8085']
+        labels:
+          instance_name: "Saptangplane"
+      - targets: ['10.10.20.68:9091']
+        labels:
+          instance_name: "Admin-Environment"
+      - targets: ['10.10.40.73:9091']
+        labels:
+          instance_name: "RIG-73"
+
+
+    relabel_configs:
+      # Relabel to make the instance label more meaningful
+      - source_labels: [instance_name, __address__]
+        separator: "::-"
+        target_label: instance
+        replacement: '${1} ${2}'

@@ -1,0 +1,126 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 60m
+  receiver: 'proxmox_alerts'
+  routes:
+    - match:
+        environment: 'proxmox'
+      receiver: 'proxmox_alerts'
+    - match:
+        environment: 'aws'
+      receiver: 'aws_alerts'
+    - match:
+        environment: 'azure'
+      receiver: 'azure_alerts'
+
+receivers:
+  - name: 'proxmox_alerts'
+    slack_configs:
+      - send_resolved: true
+        channel: "proxmox_alerts"
+        api_url: "https://rocketchat.pinacalabs.com/hooks/67613096b98992939a6f7978/tgoZGQneZo5bFHk3PQT57vki4YHsMdHbeMeky9YtcW5dtpji"
+        title: |-
+          [{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}
+        text: >-
+          *🚨 Proxmox Alerts 🚨* 
+
+          {{ range .Alerts }} 
+
+          * *Alert Name::-* `{{ .Labels.alertname }}` 
+
+          * *Server::-* `{{ .Labels.instance }}` 
+
+          * *Severity::-* `{{ .Labels.severity }}`
+
+          * *Job::-* `{{ .Labels.job }}`
+
+          {{ if .Labels.device }}* *Disk Device::-* `{{ .Labels.device }}`{{ end }} 
+
+          {{ if .Labels.mountpoint }}* *Mountpoint::-* `{{ .Labels.mountpoint }}`{{ end }} 
+
+          * *Description::-* {{ .Annotations.description }} 
+
+          * *Started At::-* `{{ .StartsAt }}`
+
+
+          ```***************************************```
+
+          {{ end }}
+
+  - name: 'aws_alerts'
+    slack_configs:
+      - send_resolved: true
+        channel: "aws_alerts"
+        api_url: "https://rocketchat.pinacalabs.com/hooks/6761305cb98992939a6f7975/huhyALCaKYaNLBcvmRTjgKmZBihiREJzsN6rPRKphAYCSzWn"
+        title: |-
+          [{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}
+        text: >-
+          *☁️ AWS Alerts ☁️* 
+          
+          {{ range .Alerts }} 
+
+          * *Alert Name::-* `{{ .Labels.alertname }}`
+
+          * *Server:* `{{ .Labels.instance }}` 
+
+          * *Severity::-* `{{ .Labels.severity }}` 
+
+          * *Job::-* `{{ .Labels.job }}` 
+
+          {{ if .Labels.device }}* *Disk Device::-* `{{ .Labels.device }}`{{ end }} 
+
+          {{ if .Labels.mountpoint }}* *Mountpoint::-* `{{ .Labels.mountpoint }}`{{ end }} 
+
+          * *Description::-* {{ .Annotations.description }}
+
+          * *Started At::-* `{{ .StartsAt }}` 
+
+
+          ```***************************************```
+
+          {{ end }}
+
+  - name: 'azure_alerts'
+    slack_configs:
+      - send_resolved: true
+        channel: "azure_alerts"
+        api_url: "https://rocketchat.pinacalabs.com/hooks/67613082b98992939a6f7977/vZTs3bxgeKJoDG3N4rnG32Zv9zgdiLPGM5NGSxjaCLrRefib"
+        title: |-
+          [{{ .Status | toUpper }}] {{ .GroupLabels.alertname }}
+        text: >-
+          *🔵 Azure Alerts 🔵* 
+          
+          {{ range .Alerts }}
+
+          * *Alert Name::-* `{{ .Labels.alertname }}`
+
+          * *Server::-* `{{ .Labels.instance }}`
+
+          * *Severity::-* `{{ .Labels.severity }}`
+
+          * *Job::-* `{{ .Labels.job }}` 
+
+          {{ if .Labels.device }}* *Disk Device::-* `{{ .Labels.device }}`{{ end }} 
+
+          {{ if .Labels.mountpoint }}* *Mountpoint::-* `{{ .Labels.mountpoint }}`{{ end }}
+
+          * *Description::-* {{ .Annotations.description }} 
+
+          * *Started At::-* `{{ .StartsAt }}`
+
+
+          ```***************************************```
+
+          {{ end }}
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']

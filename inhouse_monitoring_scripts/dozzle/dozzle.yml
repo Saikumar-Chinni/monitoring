@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle
+    restart: unless-stopped
+    environment:
+#       DOZZLE_REMOTE_HOST: tcp://10.10.20.71:2375,tcp://10.10.20.68:2375 
+       DOZZLE_REMOTE_HOST: tcp://Garuda-environment-10.10.20.68:2375,tcp://Platform-environemt-10.10.20.71:2375,tcp://infinity-environment-10.10.20.76:2375
+#      - DOZZLE_API_URL=http://10.10.20.71:2375  # Remote Docker API
+#      - DOZZLE_API_URL=http://docker-host-2:2375  # Additional remote Docker API
+    ports:
+      - "8888:8080"
+    labels:
+      traefik.enable: true
+      traefik.name: logs
+
+

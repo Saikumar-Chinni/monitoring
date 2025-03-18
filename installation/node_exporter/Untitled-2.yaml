@@ -1,0 +1,103 @@
+```
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 30m
+  receiver: 'proxmox_alerts'
+
+  routes:
+    - match:
+        environment: 'proxmox'
+      receiver: 'proxmox_alerts'
+
+    - match:
+        environment: 'aws'
+      receiver: 'aws_alerts'
+
+    - match:
+        environment: 'azure'
+      receiver: 'azure_alerts'
+
+receivers:
+  - name: 'proxmox_alerts'
+    slack_configs:
+      - send_resolved: true
+        channel: "proxmox_alerts"
+        api_url: "https://rocketchat.pinacalabs.com/hooks/67501aa62086bf787e8a5466/uvxXsvfqxKL3kQLxbAzaoz3wknYcmQWoX2Gi69RzMhuvnrod"
+        icon_url: "https://avatars3.githubusercontent.com/u/3380462"
+        title: |-
+          [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}
+        text: >-
+          {{ with index .Alerts 0 -}}
+            :chart_with_upwards_trend: *<{{ .GeneratorURL }}|Graph>*
+            {{- if .Annotations.runbook }}   :notebook: *<{{ .Annotations.runbook }}|Runbook>*{{ end }}
+          {{ end }}
+
+          *Alert details*:
+
+          {{ range .Alerts -}}
+            *Alert:* {{ .Annotations.alertname }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
+            *Description:* {{ .Annotations.description }}
+            *Details:*
+              {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+              {{ end }}
+          {{ end }}
+  - name: 'aws_alerts'
+    slack_configs:
+      - send_resolved: true
+        channel: "aws_alerts"
+        api_url: "https://rocketchat.pinacalabs.com/hooks/67501aca2086bf787e8a5470/xaJicQ6nyKNykiD499ER3DS3DaYERJJpKK7HYwdKPWKYu6Zh"
+        icon_url: "https://avatars3.githubusercontent.com/u/3380462"
+        title: |-
+          [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}
+        text: >-
+          {{ with index .Alerts 0 -}}
+            :chart_with_upwards_trend: *<{{ .GeneratorURL }}|Graph>*
+            {{- if .Annotations.runbook }}   :notebook: *<{{ .Annotations.runbook }}|Runbook>*{{ end }}
+          {{ end }}
+
+          *Alert details*:
+
+          {{ range .Alerts -}}
+            *Alert:* {{ .Annotations.alertname }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
+            *Description:* {{ .Annotations.description }}
+            *Details:*
+              {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+              {{ end }}
+          {{ end }}
+  - name: 'azure_alerts'
+    slack_configs:
+      - send_resolved: true
+        channel: "azure_alerts"
+        api_url: "https://rocketchat.pinacalabs.com/hooks/67501ae62086bf787e8a547a/bCKzsT2J8ubhJbMyXRhPY5dSzH5GQT62KEch8spYDS4p5nTb"
+        icon_url: "https://avatars3.githubusercontent.com/u/3380462"
+        title: |-
+          [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.alertname }}
+        text: >-
+          {{ with index .Alerts 0 -}}
+            :chart_with_upwards_trend: *<{{ .GeneratorURL }}|Graph>*
+            {{- if .Annotations.runbook }}   :notebook: *<{{ .Annotations.runbook }}|Runbook>*{{ end }}
+          {{ end }}
+
+          *Alert details*:
+
+          {{ range .Alerts -}}
+            *Alert:* {{ .Annotations.alertname }}{{ if .Labels.severity }} - `{{ .Labels.severity }}`{{ end }}
+            *Description:* {{ .Annotations.description }}
+            *Details:*
+              {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+              {{ end }}
+          {{ end }}
+
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'dev', 'instance']
+```

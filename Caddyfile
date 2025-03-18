@@ -1,0 +1,52 @@
+####################Grafana Production to monitor all the servers#############################
+grafana.pinacagroup.internal:443 {
+
+	reverse_proxy localhost:3001
+	tls /etc/ssl/certs/grafana.crt /etc/ssl/certs/grafana.key
+}
+grafana.pinacagroup.internal:80 {
+        # Redirect all HTTP requests to HTTPS.
+        redir https://{host}{uri}
+}
+
+:80, :443 {
+        @blockIP {
+                not host grafana.pinacagroup.internal
+        }
+        respond @blockIP "Access Denied try with Domain" 403
+}
+
+############################grafana-dev#########################################################
+grafana-dev.pinacagroup.internal:443 {
+
+        reverse_proxy localhost:3002
+        tls /etc/ssl/certs/grafana-dev.crt /etc/ssl/certs/grafana-dev.key
+}
+grafana-dev.pinacagroup.internal:80 {
+        # Redirect all HTTP requests to HTTPS.
+        redir https://{host}{uri}
+}
+
+################################Prometheus######################################################
+prometheus.pinacagroup.internal:443 {
+
+        reverse_proxy localhost:9090
+        tls /etc/ssl/certs/prometheus.crt /etc/ssl/certs/prometheus.key
+}
+prometheus.pinacagroup.internal:80 {
+        # Redirect all HTTP requests to HTTPS.
+        redir https://{host}{uri}
+}
+
+##################################logs-dev###################################################
+logs-dev.pinacagroup.internal:443 {
+
+        reverse_proxy localhost:8888
+        tls /etc/ssl/certs/logs-dev.crt /etc/ssl/certs/logs-dev.key
+}
+logs-dev.pinacagroup.internal:80 {
+        # Redirect all HTTP requests to HTTPS.
+        redir https://{host}{uri}
+}
+
+##########################################################################################

@@ -1,0 +1,32 @@
+groups:
+- name: proxmox.alert.rules
+  rules:
+    - alert: HighCpuUsage
+      expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{job="node-exporter-PROXMOX", mode="idle"}[5m])) * 100) > 90
+      for: 15m
+      labels:
+        severity: critical
+        environment: proxmox
+      annotations:
+        summary: "High CPU usage on {{ $labels.instance_name }}"
+        description: "{{ $labels.instance_name }} is experiencing high CPU usage ({{ $value }}%)."
+
+    - alert: HighMemoryUsage
+      expr: (node_memory_MemTotal_bytes{job="node-exporter-PROXMOX"} - node_memory_MemFree_bytes{job="node-exporter-PROXMOX"} - node_memory_Buffers_bytes{job="node-exporter-PROXMOX"} - node_memory_Cached_bytes{job="node-exporter-PROXMOX"}) / node_memory_MemTotal_bytes{job="node-exporter-PROXMOX"} * 100 > 90
+      for: 15m
+      labels:
+        severity: critical
+        environment: proxmox
+      annotations:
+        summary: "High Memory usage on {{ $labels.instance_name }}"
+        description: "{{ $labels.instance_name }} is experiencing high memory usage ({{ $value }}%)."
+
+    - alert: LowDiskSpace
+      expr: (100 * (1 - (node_filesystem_avail_bytes{job="node-exporter-PROXMOX"} / node_filesystem_size_bytes{job="node-exporter-PROXMOX"}))) > 85
+      for: 15m
+      labels:
+        severity: warning
+        environment: proxmox
+      annotations:
+        summary: "Low Disk Space on {{ $labels.instance_name }}"
+        description: "{{ $labels.instance_name }} is running low on disk space ({{ $value }}%)."
